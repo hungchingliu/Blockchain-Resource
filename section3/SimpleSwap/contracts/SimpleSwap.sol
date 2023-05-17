@@ -39,7 +39,17 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
 
         uint256 amountOut;
         if(tokenIn == tokenA && tokenOut == tokenB) {
-            amountOut = reserveB - reserveA * reserveB / (reserveA + amountIn);
+            // reserveA * reserveB / (reserveA + amountIn) is integer division
+            // the result might be smaller than actual value
+            // which further cause amountOut larger than actual value
+            // If amountOut is larger than actual value, user swap out more token than expected
+            // Liquidity(K) will decrease
+
+            // Solution here is to add one more digit precision to amountOut and discard it anyway
+            // Another solution is to add 1 to the integer divsion result if there exist remainder
+            
+            amountOut = reserveB * 10 - reserveA * reserveB * 10 / (reserveA + amountIn);
+            amountOut /= 10;
             ERC20(tokenA).transferFrom(msg.sender, address(this), amountIn);
             ERC20(tokenB).transfer(msg.sender, amountOut);
             reserveA += amountIn;
@@ -47,7 +57,8 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
             emit Swap(msg.sender, tokenA, tokenB, amountIn, amountOut);
             amountOut_ = amountOut;
         } else if(tokenIn == tokenB && tokenOut == tokenA) {
-            amountOut = reserveA - reserveA * reserveB / (reserveB + amountIn);
+            amountOut = reserveA * 10- reserveA * reserveB * 10 / (reserveB + amountIn);
+            amountOut /= 10;
             ERC20(tokenA).transfer(msg.sender, amountOut);
             ERC20(tokenB).transferFrom(msg.sender, address(this), amountIn);
             reserveB += amountIn;
