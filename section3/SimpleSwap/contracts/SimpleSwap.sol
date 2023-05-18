@@ -44,27 +44,22 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
             // which further cause amountOut larger than actual value
             // If amountOut is larger than actual value, user swap out more token than expected
             // Liquidity(K) will decrease
-
-            // Solution here is to add one more digit precision to amountOut and discard it anyway
-            // Another solution is to add 1 to the integer divsion result if there exist remainder
             
-            amountOut = reserveB * 10 - reserveA * reserveB * 10 / (reserveA + amountIn);
-            amountOut /= 10;
-            ERC20(tokenA).transferFrom(msg.sender, address(this), amountIn);
-            ERC20(tokenB).transfer(msg.sender, amountOut);
+            amountOut = reserveB - (reserveA * reserveB + 1) / (reserveA + amountIn - 1);
             reserveA += amountIn;
             reserveB -= amountOut;
-            emit Swap(msg.sender, tokenA, tokenB, amountIn, amountOut);
             amountOut_ = amountOut;
+            ERC20(tokenA).transferFrom(msg.sender, address(this), amountIn);
+            ERC20(tokenB).transfer(msg.sender, amountOut);
+            emit Swap(msg.sender, tokenA, tokenB, amountIn, amountOut);
         } else if(tokenIn == tokenB && tokenOut == tokenA) {
-            amountOut = reserveA * 10- reserveA * reserveB * 10 / (reserveB + amountIn);
-            amountOut /= 10;
-            ERC20(tokenA).transfer(msg.sender, amountOut);
-            ERC20(tokenB).transferFrom(msg.sender, address(this), amountIn);
+            amountOut = reserveA - (reserveA * reserveB + 1) / (reserveB + amountIn - 1);
             reserveB += amountIn;
             reserveA -= amountOut;
-            emit Swap(msg.sender, tokenB, tokenA, amountIn, amountOut);
             amountOut_ = amountOut;
+            ERC20(tokenA).transfer(msg.sender, amountOut);
+            ERC20(tokenB).transferFrom(msg.sender, address(this), amountIn);
+            emit Swap(msg.sender, tokenB, tokenA, amountIn, amountOut);
         }
     }
 
@@ -86,11 +81,11 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
             reserveA = amountA;
             reserveB = amountB;
 
-            ERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
-            ERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
-
             liquidity = Math.sqrt(amountA * amountB); 
             _mint(msg.sender, liquidity);
+
+            ERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
+            ERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
             emit AddLiquidity(msg.sender, amountA, amountB, liquidity);
         } else {
             uint256 expectB = amountAIn * reserveB / reserveA;
@@ -105,10 +100,11 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
             reserveA += amountA;
             reserveB += amountB;
 
-            ERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
-            ERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
             liquidity = Math.sqrt(amountA * amountB); 
             _mint(msg.sender, liquidity);
+
+            ERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
+            ERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
             emit AddLiquidity(msg.sender, amountA, amountB, liquidity);
         }
     }
@@ -126,11 +122,11 @@ contract SimpleSwap is ISimpleSwap, ERC20 {
         amountB = liquidity * reserveB / totalSupply;
         _transfer(msg.sender, address(this), liquidity);
         _burn(address(this), liquidity);
+        reserveA -= amountA;
+        reserveB -= amountB;
         ERC20(tokenA).transfer(msg.sender, amountA);
         ERC20(tokenB).transfer(msg.sender, amountB);
         emit RemoveLiquidity(msg.sender, amountA, amountB, liquidity);
-        reserveA -= amountA;
-        reserveB -= amountB;
     }
 
     function getReserves() 
