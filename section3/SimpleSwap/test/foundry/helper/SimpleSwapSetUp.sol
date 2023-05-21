@@ -20,7 +20,7 @@ contract SimpleSwapSetUp is Test, ISimpleSwapEvent {
     SimpleSwap simpleSwap;
 
     function setUp() public virtual {
-        tokenB = new TeStERC20("token B", "TKB");
+        tokenB = new TestERC20("token B", "TKB");
         tokenA = new TestERC20("token A", "TKA");
 
         tokenADecimals = tokenA.decimals();
