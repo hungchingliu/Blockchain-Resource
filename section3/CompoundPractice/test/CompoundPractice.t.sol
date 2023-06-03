@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import { EIP20Interface } from "compound-protocol/contracts/EIP20Interface.sol";
 import { CErc20 } from "compound-protocol/contracts/CErc20.sol";
 import "test/helper/CompoundPracticeSetUp.sol";
+import "forge-std/console.sol";
 
 interface IBorrower {
   function borrow() external;
@@ -34,22 +35,32 @@ contract CompoundPracticeTest is CompoundPracticeSetUp {
   function test_compound_mint_interest() public {
     vm.startPrank(user); 
     // TODO: 1. Mint some cUSDC with USDC
-
+    uint amount = 100 * 10 ** USDC.decimals();
+    USDC.approve(address(cUSDC), amount);
+    cUSDC.mint(amount);
+    uint cTokenAmount = cUSDC.balanceOf(user);
     // TODO: 2. Modify block state to generate interest
-
+    vm.roll(block.number + 100);
     // TODO: 3. Redeem and check the redeemed amount
+    cUSDC.redeem(cTokenAmount);
+    uint usdcBalance = USDC.balanceOf(user);
+    console.log(usdcBalance);
   }
 
   function test_compound_mint_interest_with_borrower() public {
     vm.startPrank(user); 
     // TODO: 1. Mint some cUSDC with USDC
-
+    uint amount = 100 * 10 ** USDC.decimals();
+    USDC.approve(address(cUSDC), amount);
+    cUSDC.mint(amount);
+    uint cTokenAmount = cUSDC.balanceOf(user); 
     // 2. Borrower.borrow() will borrow some USDC
     borrower.borrow();
-
     // TODO: 3. Modify block state to generate interest
-
-
+    vm.roll(block.number + 100); 
     // TODO: 4. Redeem and check the redeemed amount
+    cUSDC.redeem(cTokenAmount);
+    uint usdcBalance = USDC.balanceOf(user);
+    console.log(usdcBalance);
   }
 }
