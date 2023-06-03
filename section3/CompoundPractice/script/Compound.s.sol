@@ -43,17 +43,17 @@ contract CompoundDeploy is Script {
         uint baseRatePerYear = 0;
         uint mutliplierPerYear = 0;
         InterestRateModel interestRateModel = new WhitePaperInterestRateModel(baseRatePerYear, mutliplierPerYear);
-        uint exchangeRate = 1;
-        uint8 decimals = 18;
-        string memory symbol = "cABC";
+        uint exchangeRateMantissa = 1 * 1e18;
         string memory name = "CToken ABC";
-        address payable admin = payable(address(0x0));
+        string memory symbol = "cABC";
+        uint8 decimals = 18;
+        address payable admin = payable(msg.sender);
         CErc20Delegate cDelegatee = new CErc20Delegate();
         CErc20Delegator cDelegator = new CErc20Delegator(
            address(ABCToken),
            iComptroller,
            interestRateModel,
-           exchangeRate,
+           exchangeRateMantissa,
            name,
            symbol,
            decimals,
